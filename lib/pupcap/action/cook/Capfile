@@ -11,7 +11,7 @@ namespace :cook do
       host = Pupcap::Command.server_host(self, server)
       ssh_cmd = "-e \"ssh -p #{port} -i #{provision_key}\""
       rsync_options = "-p --chmod=o+r,g+r -az"
-      cmd = "rsync #{rsync_options} #{ssh_cmd} #{local_root}/ #{host}:#{deploy_to}"
+      cmd = "rsync #{rsync_options} #{ssh_cmd} #{local_root}/puppet/ #{host}:#{deploy_to}"
       logger.important(cmd)
       system(cmd)
     end

@@ -17,7 +17,7 @@ class Pupcap::CLI
     end
 
     def valid_actions
-      %w{ prepare cook ssh }
+      %w{ prepare cook ssh init }
     end
   end
 end
