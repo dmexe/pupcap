@@ -2,6 +2,7 @@ namespace :prepare do
   task :default do
     generate_keys
     ssh_copy_id
+    run_script
   end
 
   task :ssh_copy_id do
@@ -15,10 +16,21 @@ namespace :prepare do
   task :generate_keys do
     unless File.exists?(provision_key)
       logger.important("Generate keys")
-      Pupcap::Action.ensure_local_dir("#{local_root}/.keys", "0700")
-      Pupcap::Action.run_local("ssh-keygen -q -b 1024 -t rsa -C \"#{application} provision key\" -f #{provision_key}")
-      Pupcap::Action.run_local("chmod 0600 #{provision_key}")
-      Pupcap::Action.run_local("chmod 0600 #{provision_key_pub}")
+      Pupcap::Command.ensure_local_dir("#{local_root}/.keys", "0700")
+      Pupcap::Command.run_local("ssh-keygen -q -b 1024 -t rsa -C \"#{application} provision key\" -f #{provision_key}")
+      Pupcap::Command.run_local("chmod 0600 #{provision_key}")
+      Pupcap::Command.run_local("chmod 0600 #{provision_key_pub}")
+    end
+  end
+
+  task :run_script do
+    if exists?(:pupcap_prepare_script)
+      remote_script_name = "/tmp/pupcap_prepare.#{Time.now.to_i}.sh"
+      upload(pupcap_prepare_script, remote_script_name)
+      run("chmod 0755 #{remote_script_name}")
+      force = pupcap_options[:force] ? "1" : "0"
+      sudo("env PUPCAP_FORCE=#{force} #{remote_script_name}")
+      run("rm #{remote_script_name}")
     end
   end
 end
