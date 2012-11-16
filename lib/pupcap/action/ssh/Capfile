@@ -1,9 +1,11 @@
 namespace :ssh do
   task :default do
     server = find_servers_for_task(current_task).first
-    host = Pupcap::Command.server_host(self, server)
-    port = Pupcap::Command.server_port(self, server)
-    exec "ssh #{host} -t -p #{port} -i #{ssh_options[:keys]} '${SHELL} -l'"
+    if server
+      host = Pupcap::Command.server_host(self, server)
+      port = Pupcap::Command.server_port(self, server)
+      exec "ssh #{host} -t -p #{port} -i #{ssh_options[:keys]} '${SHELL} -l'"
+    end
   end
 end
 

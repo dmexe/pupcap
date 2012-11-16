@@ -22,7 +22,7 @@ class Pupcap::Action::Prepare < Pupcap::Action::Base
     unless @parsed_options
       options = default_options.dup
       OptionParser.new do |opts|
-        opts.banner = "Usage: #{File.basename($0)} [options] <role> prepare"
+        opts.banner = "Usage: #{File.basename($0)} prepare [options] <role>"
 
         opts.on("-h", "--help", "Displays this help info") do
           puts opts
