@@ -1,16 +1,30 @@
 set -e
+set -v
 
-test -e /root/.pupcap_prepare_ok -a ${PUPCAP_FORCE} = "0" && exit 0
+if test -e /root/.pupcap_prepare_ok -a "x${PUPCAP_FORCE}" = "x0"
+then
+  exit 0
+fi
 
-if [ ! -e /root/.pupcap_prepare_locale_ok -o ${PUPCAP_FORCE} = "1"  ]; then
-  locale-gen && update-locale LANG=en_US.UTF8 && touch /root/pupcap_prepare_locale_ok
+if test ! -e /root/.pupcap_prepare_locale_ok -o "x${PUPCAP_FORCE}" = "x1"
+then
+  locale-gen en_US.UTF-8 && update-locale LANG=en_US.UTF-8 && touch /root/pupcap_prepare_locale_ok
+fi
+
+if test -n "${PUPCAP_HOSTNAME}"
+then
+  echo ${PUPCAP_HOSTNAME} > /etc/hostname
+  cat /etc/hosts | grep ${PUPCAP_HOSTNAME} || echo "127.0.0.1  ${PUPCAP_HOSTNAME}" >> /etc/hosts && /usr/sbin/service hostname start
 fi
 
 SOURCES_LIST=/etc/apt/sources.list
 
 SOURCES_LIST_MD5=`md5sum ${SOURCES_LIST} | awk '{ print $1 }'`
 
-if [ "$SOURCES_LIST_MD5" != "0af83b87b34bcdebf8a81a7ccc523e26" -o ${PUPCAP_FORCE} = "1" ]; then
+if test "$SOURCES_LIST_MD5" != "14846cd43a3ef58b204b0807fa4856f8" -o "x${PUPCAP_FORCE}" = "x1"
+then
+
+  cp -f ${SOURCES_LIST} ${SOURCES_LIST}.pupcap_back
 
   cat <<EOF > ${SOURCES_LIST}
 #############################################################
@@ -18,14 +32,14 @@ if [ "$SOURCES_LIST_MD5" != "0af83b87b34bcdebf8a81a7ccc523e26" -o ${PUPCAP_FORCE
 #############################################################
 
 ###### Ubuntu Main Repos
-deb mirror://mirrors.ubuntu.com/mirrors.txt precise main
-deb-src mirror://mirrors.ubuntu.com/mirrors.txt precise main
+deb http://us.archive.ubuntu.com/ubuntu/ precise main
+deb-src http://us.archive.ubuntu.com/ubuntu/ precise main
 
 ###### Ubuntu Update Repos
-deb mirror://mirrors.ubuntu.com/mirrors.txt precise-security main
-deb mirror://mirrors.ubuntu.com/mirrors.txt precise-updates main
-deb-src mirror://mirrors.ubuntu.com/mirrors.txt precise-security main
-deb-src mirror://mirrors.ubuntu.com/mirrors.txt precise-updates main
+deb http://us.archive.ubuntu.com/ubuntu/ precise-security main
+deb http://us.archive.ubuntu.com/ubuntu/ precise-updates main
+deb-src http://us.archive.ubuntu.com/ubuntu/ precise-security main
+deb-src http://us.archive.ubuntu.com/ubuntu/ precise-updates main
 EOF
   echo >> ${SOURCES_LIST} # new line
 
@@ -38,5 +52,7 @@ apt-get install -qy rsync wget rubygems vim git-core build-essential > /dev/null
 apt-get -qy clean
 
 /usr/bin/gem install -q --no-ri --no-rdoc --version '~> 2.7.1' puppet
+/usr/sbin/groupadd -f puppet
+
 touch /root/.pupcap_prepare_ok
 

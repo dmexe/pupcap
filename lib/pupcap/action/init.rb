@@ -37,9 +37,9 @@ class Pupcap::Action::Init < Pupcap::Action::Base
   end
 
   def create_pp
-    out = "#{work_dir}/puppet/manifests/vagrant.pp"
+    out = "#{work_dir}/puppet/manifests/default.pp"
     if !File.exists?(out) || force?
-      erb = ERB.new(File.read("#{lib_root}/init/vagrant.pp.erb"))
+      erb = ERB.new(File.read("#{lib_root}/init/default.pp.erb"))
       rs = erb.result(binding)
       File.open(out, "w+"){ |io| io.write rs }
     else

@@ -1,1 +1,3 @@
-role :vagrant, "<%= ip %>", :user => "vagrant", :port => 22
+task :vagrant do
+  role :vagrant, "<%= ip %>", :user => "vagrant", :port => 22
+end

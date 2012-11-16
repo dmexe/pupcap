@@ -1,0 +1,8 @@
+set -e
+
+for role in $(echo "${1}" | tr "," "\n")
+do
+  echo "*** ${role} ***"
+  <%= puppet %> apply <%= nook + debug %>  --detailed-exitcodes <%= modules %> <%= deploy_to %>/manifests/${role}.pp || true
+done
+

@@ -3,9 +3,7 @@ require 'pupcap/command'
 
 class Pupcap::Action::Cook < Pupcap::Action::Base
   def initialize
-    check_role!
     check_puppetfile!
-    ENV["ROLES"] = parsed_options[:role]
   end
 
   def start
@@ -36,7 +34,7 @@ class Pupcap::Action::Cook < Pupcap::Action::Base
           options[:noop] = true
         end
       end.parse!
-      options[:role] = ARGV.first
+      options[:tasks] = ARGV
       @parsed_options = options
     end
     @parsed_options

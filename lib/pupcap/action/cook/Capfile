@@ -1,3 +1,5 @@
+require 'erb'
+
 namespace :cook do
   task :default do
     rsync
@@ -18,10 +20,19 @@ namespace :cook do
   end
 
   task :apply do
+    remote_command = "#{deploy_to}/apply.sh"
+
+    puppet = "/usr/local/bin/puppet"
     modules = "--modulepath=#{deploy_to}/modules:#{deploy_to}/manifests"
-    nook = pupcap_options[:noop] ? "--noop" : ""
-    debug = pupcap_options[:debug] ? "--debug" : ""
-    sudo("/usr/local/bin/puppet apply --detailed-exitcodes #{nook} #{debug} #{modules} #{deploy_to}/manifests/#{ENV["ROLES"]}.pp || true")
+    nook = pupcap_options[:noop] ? " --noop" : ""
+    debug = pupcap_options[:debug] ? " --debug --verbose" : ""
+
+    erb = ERB.new(File.read("#{pupcap_root}/action/cook/apply.sh.erb"))
+    rs = erb.result(binding)
+
+    put(rs, remote_command)
+    run("chmod +x #{remote_command}")
+    sudo("#{remote_command} \"$CAPISTRANO:HOSTROLES$\"")
   end
 
   task :cleanup do

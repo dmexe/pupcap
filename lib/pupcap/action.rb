@@ -16,9 +16,9 @@ module Pupcap::Action
       end
     end
 
-    def check_role!
-      unless parsed_options[:role]
-        $stderr.puts "Please specify role"
+    def check_tasks!
+      if parsed_options[:tasks].empty?
+        $stderr.puts "Please specify tasks"
         exit 1
       end
     end
@@ -28,6 +28,9 @@ module Pupcap::Action
       cap.logger.level = Capistrano::Logger::DEBUG
       set_cap_vars!(cap, file)
       cap.load file
+      parsed_options[:tasks].each do |task|
+        cap.find_and_execute_task(task)
+      end
       cap
     end
 
@@ -36,7 +39,6 @@ module Pupcap::Action
     end
 
     def cap_load_and_run_task(cap, task)
-      cap.set :pupcap_options, parsed_options
       cap.load "#{lib_root}/#{task}/Capfile"
       cap.trigger(:load)
       cap.find_and_execute_task(task, :before => :start, :after => :finish)
@@ -48,10 +50,12 @@ module Pupcap::Action
       def set_cap_vars!(cap, file)
         app = ENV['app'] || File.basename(File.dirname(file))
         cap.set :application,       app
-        cap.set :local_root,         File.dirname(file)
+        cap.set :local_root,        File.dirname(file)
+        cap.set :pupcap_root,       File.dirname(File.expand_path __FILE__)
         cap.set :provision_key,     "#{cap.local_root}/.keys/provision"
         cap.set :provision_key_pub, "#{cap.local_root}/.keys/provision.pub"
         cap.set :deploy_to,         "/tmp/puppet"
+        cap.set :pupcap_options,    parsed_options
         cap.ssh_options[:keys]          = cap.provision_key
         cap.ssh_options[:forward_agent] = true
         cap.default_run_options[:pty]   = true
