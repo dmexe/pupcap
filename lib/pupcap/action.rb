@@ -51,11 +51,11 @@ module Pupcap::Action
         cap.set :local_root,         File.dirname(file)
         cap.set :provision_key,     "#{cap.local_root}/.keys/provision"
         cap.set :provision_key_pub, "#{cap.local_root}/.keys/provision.pub"
+        cap.set :deploy_to,         "/tmp/puppet"
         cap.ssh_options[:keys]          = cap.provision_key
         cap.ssh_options[:forward_agent] = true
         cap.default_run_options[:pty]   = true
         cap
       end
-
   end
 end

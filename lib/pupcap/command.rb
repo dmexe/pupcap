@@ -10,5 +10,14 @@ class Pupcap::Command
       system cmd
       fail "#{cmd} fail" if $?.to_i != 0
     end
+
+    def server_port(cap, server)
+      server.port || cap.ssh_options[:port] || 22
+    end
+
+    def server_host(cap, server)
+      u = server.user || cap.fetch(:user)
+      u ? "#{u}@#{server.host}" : server.host
+    end
   end
 end

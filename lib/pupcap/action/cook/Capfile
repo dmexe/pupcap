@@ -1,26 +1,30 @@
 namespace :cook do
   task :default do
-    remote_path = "/tmp/puppet"
+    rsync
+    apply
+    cleanup
+  end
+
+  task :rsync do
     find_servers.each do |server|
-      ssh_cmd = "-e \"ssh -p #{cook_ssh_port(server)} -i #{provision_key}\""
-      rsync_options = "-p --chmod=o+r,g+r -az --exclude=\".keys/\""
-      rsync_path = "--rsync-path=\"sudo rsync\""
-      cmd = "rsync #{rsync_options} #{ssh_cmd} #{local_root}/ #{rsync_path} #{cook_rsync_host(server)}:#{remote_path}"
+      port = Pupcap::Command.server_port(self, server)
+      host = Pupcap::Command.server_host(self, server)
+      ssh_cmd = "-e \"ssh -p #{port} -i #{provision_key}\""
+      rsync_options = "-p --chmod=o+r,g+r -az"
+      cmd = "rsync #{rsync_options} #{ssh_cmd} #{local_root}/ #{host}:#{deploy_to}"
       logger.important(cmd)
       system(cmd)
     end
-    modules = "--modulepath=#{remote_path}/modules:#{remote_path}/manifests"
-    nook = ENV["try"] ? "--noop" : ""
-    debug = ENV["debug"] ? "--debug" : ""
-    sudo("/usr/local/bin/puppet apply --detailed-exitcodes #{nook} #{debug} #{modules} #{remote_path}/manifests/#{ENV["ROLES"]}.pp || true")
   end
 
-  def cook_ssh_port(server)
-    server.port || ssh_options[:port] || 22
+  task :apply do
+    modules = "--modulepath=#{deploy_to}/modules:#{deploy_to}/manifests"
+    nook = pupcap_options[:noop] ? "--noop" : ""
+    debug = pupcap_options[:debug] ? "--debug" : ""
+    sudo("/usr/local/bin/puppet apply --detailed-exitcodes #{nook} #{debug} #{modules} #{deploy_to}/manifests/#{ENV["ROLES"]}.pp || true")
   end
 
-  def cook_rsync_host(server)
-    u = server.user || fetch(:user)
-    u ? "#{u}@#{server.host}" : server.host
+  task :cleanup do
+    run("rm -rf #{deploy_to}")
   end
 end
