@@ -1,0 +1,2 @@
+module Pupcap
+end

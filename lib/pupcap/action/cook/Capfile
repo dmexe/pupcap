@@ -1,0 +1,26 @@
+namespace :cook do
+  task :default do
+    remote_path = "/tmp/puppet"
+    find_servers.each do |server|
+      ssh_cmd = "-e \"ssh -p #{cook_ssh_port(server)} -i #{provision_key}\""
+      rsync_options = "-p --chmod=o+r,g+r -az --exclude=\".keys/\""
+      rsync_path = "--rsync-path=\"sudo rsync\""
+      cmd = "rsync #{rsync_options} #{ssh_cmd} #{local_root}/ #{rsync_path} #{cook_rsync_host(server)}:#{remote_path}"
+      logger.important(cmd)
+      system(cmd)
+    end
+    modules = "--modulepath=#{remote_path}/modules:#{remote_path}/manifests"
+    nook = ENV["try"] ? "--noop" : ""
+    debug = ENV["debug"] ? "--debug" : ""
+    sudo("/usr/local/bin/puppet apply --detailed-exitcodes #{nook} #{debug} #{modules} #{remote_path}/manifests/#{ENV["ROLES"]}.pp || true")
+  end
+
+  def cook_ssh_port(server)
+    server.port || ssh_options[:port] || 22
+  end
+
+  def cook_rsync_host(server)
+    u = server.user || fetch(:user)
+    u ? "#{u}@#{server.host}" : server.host
+  end
+end
