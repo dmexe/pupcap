@@ -1,23 +1,32 @@
 require 'erb'
 
-namespace :apply do
-  task :default do
-    rsync
-    puppet
-    cleanup
+namespace :deploy do
+  task :finalize_update do
+    run("ln -sf #{shared_path}/librarian-puppet-cache #{release_path}/puppet/.tmp")
+    run("cd #{release_path}/puppet &&  test -f #{release_path}/puppet/Puppetfile && /usr/local/bin/librarian-puppet install ; true")
   end
 
-  task :rsync do
-    from = "#{local_root}/puppet"
-    to   = deploy_to
-    upload(from, to, :recursive => true, :via => :scp)
+  task :restart do
+  end
+end
+
+namespace :apply do
+  task :default do
+    try_create_dirs
+    find_and_execute_task("deploy")
+    find_and_execute_task("deploy:cleanup")
+    puppet
+  end
+
+  task :try_create_dirs do
+    run("mkdir -p #{deploy_to}/releases ; mkdir -p #{deploy_to}/shared/librarian-puppet-cache ; chmod 0700 #{deploy_to}")
   end
 
   task :puppet do
     remote_command = "#{deploy_to}/apply.sh"
 
     puppet = "/usr/local/bin/puppet"
-    modules = "--modulepath=#{deploy_to}/modules:#{deploy_to}/site-modules"
+    modules = "--modulepath=#{current_path}/puppet/modules:#{current_path}/puppet/site-modules"
     nook = pupcap_options[:noop] ? " --noop" : ""
     debug = pupcap_options[:debug] ? " --debug --verbose" : ""
 

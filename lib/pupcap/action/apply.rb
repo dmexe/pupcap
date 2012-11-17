@@ -42,7 +42,7 @@ class Pupcap::Action::Apply < Pupcap::Action::Base
 
   def default_options
     {
-      :file    => File.expand_path("Capfile"),
+      :file    => File.expand_path("Pupcapfile"),
       :debug   => false,
       :noop    => false
     }

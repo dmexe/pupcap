@@ -39,6 +39,7 @@ module Pupcap::Action
     end
 
     def cap_load_and_run_task(cap, task)
+      cap.load "deploy"
       cap.load "#{lib_root}/#{task}/Capfile"
       cap.trigger(:load)
       cap.find_and_execute_task(task, :before => :start, :after => :finish)
@@ -54,11 +55,18 @@ module Pupcap::Action
         cap.set :pupcap_root,       File.dirname(File.expand_path __FILE__)
         cap.set :provision_key,     "#{cap.local_root}/.keys/provision"
         cap.set :provision_key_pub, "#{cap.local_root}/.keys/provision.pub"
-        cap.set :deploy_to,         "/tmp/puppet"
+        cap.set :deploy_to,         "/tmp/pupcap"
         cap.set :pupcap_options,    parsed_options
         cap.ssh_options[:keys]          = cap.provision_key
         cap.ssh_options[:forward_agent] = true
         cap.default_run_options[:pty]   = true
+
+        cap.set :deploy_via,    :copy
+        cap.set :copy_cache,    true
+        cap.set :copy_exclude,  [".git", ".keys"]
+        cap.set :repository,    "."
+        cap.set :keep_releases, 2
+        cap.set :use_sudo,      false
         cap
       end
   end

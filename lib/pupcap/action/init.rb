@@ -29,9 +29,9 @@ class Pupcap::Action::Init < Pupcap::Action::Base
   end
 
   def create_capfile
-    out = "#{work_dir}/Capfile"
+    out = "#{work_dir}/Pupcapfile"
     if !File.exists?(out) || force?
-      erb = ERB.new(File.read("#{lib_root}/init/Capfile.erb"))
+      erb = ERB.new(File.read("#{lib_root}/init/Pupcapfile.erb"))
       rs = erb.result(binding)
       File.open(out, "w+"){ |io| io.write rs }
       puts "\t create Capfile"
