@@ -9,7 +9,7 @@ namespace :prepare do
 
   task :try_ssh_copy_id do
     begin
-      run("true")
+      ssh_copy_id
     rescue Capistrano::ConnectionError => e
       pass = Capistrano::CLI.password_prompt("SSH Password: ")
       set :password, pass
