@@ -1,0 +1,35 @@
+require 'erb'
+
+namespace :apply do
+  task :default do
+    rsync
+    puppet
+    cleanup
+  end
+
+  task :rsync do
+    from = "#{local_root}/puppet"
+    to   = deploy_to
+    upload(from, to, :recursive => true, :via => :scp)
+  end
+
+  task :puppet do
+    remote_command = "#{deploy_to}/apply.sh"
+
+    puppet = "/usr/local/bin/puppet"
+    modules = "--modulepath=#{deploy_to}/modules:#{deploy_to}/site-modules"
+    nook = pupcap_options[:noop] ? " --noop" : ""
+    debug = pupcap_options[:debug] ? " --debug --verbose" : ""
+
+    erb = ERB.new(File.read("#{pupcap_root}/action/apply/puppet.sh.erb"))
+    rs = erb.result(binding)
+
+    put(rs, remote_command)
+    run("chmod +x #{remote_command}")
+    sudo("#{remote_command} \"$CAPISTRANO:HOSTROLES$\"")
+  end
+
+  task :cleanup do
+    run("rm -rf #{deploy_to}")
+  end
+end

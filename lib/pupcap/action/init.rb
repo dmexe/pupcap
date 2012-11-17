@@ -10,8 +10,10 @@ class Pupcap::Action::Init < Pupcap::Action::Base
   def start
     create_directories
     create_vagrantfile
-    create_puppetfile
+    create_capfile
     create_pp
+    librarian_puppet
+    create_gitignore
   end
 
   def create_vagrantfile
@@ -20,38 +22,52 @@ class Pupcap::Action::Init < Pupcap::Action::Base
       erb = ERB.new(File.read("#{lib_root}/init/Vagrantfile.erb"))
       rs = erb.result(binding)
       File.open(out, "w+"){ |io| io.write rs }
+      puts "\t create Vagrantfile"
     else
-      puts "Skip file #{out}"
+      puts "\t skip #{out}"
     end
   end
 
-  def create_puppetfile
-    out = "#{work_dir}/Puppetfile"
+  def create_capfile
+    out = "#{work_dir}/Capfile"
     if !File.exists?(out) || force?
-      erb = ERB.new(File.read("#{lib_root}/init/Puppetfile.erb"))
+      erb = ERB.new(File.read("#{lib_root}/init/Capfile.erb"))
       rs = erb.result(binding)
       File.open(out, "w+"){ |io| io.write rs }
+      puts "\t create Capfile"
     else
-      puts "Skip file #{out}"
+      puts "\t skip #{out}"
     end
   end
 
   def create_pp
-    out = "#{work_dir}/puppet/manifests/default.pp"
+    out = "#{work_dir}/puppet/manifests/site.pp"
     if !File.exists?(out) || force?
-      erb = ERB.new(File.read("#{lib_root}/init/default.pp.erb"))
+      erb = ERB.new(File.read("#{lib_root}/init/site.pp.erb"))
       rs = erb.result(binding)
       File.open(out, "w+"){ |io| io.write rs }
+      puts "\t create puppet/manifests/site.pp"
     else
-      puts "Skip file #{out}"
+      puts "\t skip #{out}"
     end
   end
 
   def create_directories
     FileUtils.mkdir_p("#{work_dir}/puppet/modules")
+    FileUtils.mkdir_p("#{work_dir}/puppet/site-modules")
     FileUtils.mkdir_p("#{work_dir}/puppet/manifests")
-    system("touch #{work_dir}/puppet/modules/.gitkeep")
     system("touch #{work_dir}/puppet/manifests/.gitkeep")
+    system("touch #{work_dir}/puppet/site-modules/.gitkeep")
+  end
+
+  def librarian_puppet
+    Pupcap::Command.run_local("(cd #{work_dir}/puppet && librarian-puppet init)")
+  end
+
+  def create_gitignore
+    unless File.exists?("#{work_dir}.gitignore")
+      FileUtils.copy("#{lib_root}/init/gitignore", "#{work_dir}/.gitignore")
+    end
   end
 
   def work_dir

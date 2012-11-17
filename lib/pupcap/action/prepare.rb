@@ -46,7 +46,7 @@ class Pupcap::Action::Prepare < Pupcap::Action::Base
 
   def default_options
     {
-      :file    => File.expand_path("Puppetfile"),
+      :file    => File.expand_path("Capfile"),
       :force   => false,
       :upgrade => false
     }

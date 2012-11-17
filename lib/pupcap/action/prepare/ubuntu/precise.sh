@@ -6,9 +6,10 @@ then
   exit 0
 fi
 
-if test ! -e /root/.pupcap_prepare_locale_ok -o "x${PUPCAP_FORCE}" = "x1"
+CURRENT_LANG=`locale | awk '/LANG=/{ split($1, a, "=") ; print a[2] }'`
+if test "x${CURRENT_LANG}" != "xen_US.UTF-8"
 then
-  locale-gen en_US.UTF-8 && update-locale LANG=en_US.UTF-8 && touch /root/pupcap_prepare_locale_ok
+  locale-gen en_US.UTF-8 && update-locale LANG=en_US.UTF-8
 fi
 
 if test -n "${PUPCAP_HOSTNAME}"
@@ -21,7 +22,7 @@ SOURCES_LIST=/etc/apt/sources.list
 
 SOURCES_LIST_MD5=`md5sum ${SOURCES_LIST} | awk '{ print $1 }'`
 
-if test "$SOURCES_LIST_MD5" != "14846cd43a3ef58b204b0807fa4856f8" -o "x${PUPCAP_FORCE}" = "x1"
+if test "$SOURCES_LIST_MD5" != "14846cd43a3ef58b204b0807fa4856f8"
 then
 
   cp -f ${SOURCES_LIST} ${SOURCES_LIST}.pupcap_back
@@ -52,6 +53,8 @@ apt-get install -qy rsync wget rubygems vim git-core build-essential > /dev/null
 apt-get -qy clean
 
 /usr/bin/gem install -q --no-ri --no-rdoc --version '~> 2.7.1' puppet
+/usr/bin/gem install -q --no-ri --no-rdoc librarian-puppet
+
 /usr/sbin/groupadd -f puppet
 
 touch /root/.pupcap_prepare_ok

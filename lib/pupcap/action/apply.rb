@@ -1,14 +1,14 @@
 require 'pupcap/action'
 require 'pupcap/command'
 
-class Pupcap::Action::Cook < Pupcap::Action::Base
+class Pupcap::Action::Apply < Pupcap::Action::Base
   def initialize
     check_puppetfile!
   end
 
   def start
     cap = create_cap_for(parsed_options[:file])
-    cap_load_and_run_task(cap, "cook")
+    cap_load_and_run_task(cap, "apply")
   end
 
   def parsed_options
@@ -42,7 +42,7 @@ class Pupcap::Action::Cook < Pupcap::Action::Base
 
   def default_options
     {
-      :file    => File.expand_path("Puppetfile"),
+      :file    => File.expand_path("Capfile"),
       :debug   => false,
       :noop    => false
     }

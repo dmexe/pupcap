@@ -34,7 +34,7 @@ class Pupcap::Action::Ssh < Pupcap::Action::Base
 
   def default_options
     {
-      :file    => File.expand_path("Puppetfile"),
+      :file    => File.expand_path("Capfile"),
     }
   end
 end

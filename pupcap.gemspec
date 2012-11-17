@@ -22,12 +22,15 @@ Gem::Specification.new do |s|
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<capistrano>, [">= 2.12.0"])
       s.add_runtime_dependency(%q<vagrant>, [">= 1.0.0"])
+      s.add_runtime_dependency(%q<librarian-puppet>, [">= 0.9.7"])
     else
       s.add_dependency(%q<capistrano>, [">= 2.12.0"])
       s.add_dependency(%q<vagrant>, [">= 1.0.0"])
+      s.add_dependency(%q<librarian-puppet>, [">= 0.9.7"])
     end
   else
     s.add_dependency(%q<capistrano>, [">= 2.12.0"])
     s.add_dependency(%q<vagrant>, [">= 1.0.0"])
+    s.add_dependency(%q<librarian-puppet>, [">= 0.9.7"])
   end
 end
