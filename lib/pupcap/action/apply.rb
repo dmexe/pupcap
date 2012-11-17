@@ -33,6 +33,10 @@ class Pupcap::Action::Apply < Pupcap::Action::Base
         opts.on("-n", "--noop", "Noop") do |file|
           options[:noop] = true
         end
+
+        opts.on("-w", "--without-librarian-puppet", "Deploy without librarian-puppet") do
+          options[:without_librarian_puppet] = true
+        end
       end.parse!
       options[:tasks] = ARGV
       @parsed_options = options
