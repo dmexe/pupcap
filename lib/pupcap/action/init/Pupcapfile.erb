@@ -1,3 +1,5 @@
+# set :password, "any random string"
+
 task :vagrant do
-  role :site, "<%= ip %>", :user => "vagrant", :port => 22
+  role :site, "vagrant@<%= ip %>"
 end

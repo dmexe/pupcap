@@ -14,6 +14,17 @@ class Pupcap::Action::Init < Pupcap::Action::Base
     create_pp
     librarian_puppet
     create_gitignore
+    create_prepare_script
+  end
+
+  def create_prepare_script
+    out = "#{work_dir}/prepare.sh.erb"
+    if !File.exists?(out) || force?
+      FileUtils.copy("#{lib_root}/init/prepare.sh.erb", "#{work_dir}/prepare.sh.erb")
+      puts "create prepare.sh.erb"
+    else
+      puts "skip prepare.sh.erb"
+    end
   end
 
   def create_vagrantfile
@@ -22,9 +33,9 @@ class Pupcap::Action::Init < Pupcap::Action::Base
       erb = ERB.new(File.read("#{lib_root}/init/Vagrantfile.erb"))
       rs = erb.result(binding)
       File.open(out, "w+"){ |io| io.write rs }
-      puts "\t create Vagrantfile"
+      puts "create Vagrantfile"
     else
-      puts "\t skip #{out}"
+      puts "skip #{out}"
     end
   end
 
@@ -34,9 +45,9 @@ class Pupcap::Action::Init < Pupcap::Action::Base
       erb = ERB.new(File.read("#{lib_root}/init/Pupcapfile.erb"))
       rs = erb.result(binding)
       File.open(out, "w+"){ |io| io.write rs }
-      puts "\t create Capfile"
+      puts "create Capfile"
     else
-      puts "\t skip #{out}"
+      puts "skip #{out}"
     end
   end
 
@@ -46,9 +57,9 @@ class Pupcap::Action::Init < Pupcap::Action::Base
       erb = ERB.new(File.read("#{lib_root}/init/site.pp.erb"))
       rs = erb.result(binding)
       File.open(out, "w+"){ |io| io.write rs }
-      puts "\t create puppet/manifests/site.pp"
+      puts "create puppet/manifests/site.pp"
     else
-      puts "\t skip #{out}"
+      puts "skip #{out}"
     end
   end
 
@@ -65,8 +76,11 @@ class Pupcap::Action::Init < Pupcap::Action::Base
   end
 
   def create_gitignore
-    unless File.exists?("#{work_dir}.gitignore")
+    if !File.exists?("#{work_dir}.gitignore")
       FileUtils.copy("#{lib_root}/init/gitignore", "#{work_dir}/.gitignore")
+      puts "create .gitignore"
+    else
+      puts "skip .gitignore"
     end
   end
 

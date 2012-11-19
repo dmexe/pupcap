@@ -36,16 +36,17 @@ namespace :prepare do
   end
 
   task :run_script do
-    prepare_script = fetch(:pupcap_prepare_command)
+    template = pupcap_options[:script]
+    prepare_script = ERB.new(File.read template).result(binding)
+
     set :use_sudo, true
-    if File.exists?(prepare_script)
-      remote_script_name = "/tmp/pupcap_prepare.#{Time.now.to_i}.sh"
-      upload(prepare_script, remote_script_name)
-      run("chmod 0755 #{remote_script_name}")
-      force = pupcap_options[:force] ? "1" : "0"
-      hostname = pupcap_options[:hostname] ? " PUPCAP_HOSTNAME=#{pupcap_options[:hostname]}" : ""
-      sudo("env PUPCAP_FORCE=#{force}#{hostname} #{remote_script_name}")
-      run("rm #{remote_script_name}")
-    end
+
+    remote_script_name = "/tmp/pupcap_prepare.sh"
+    put(prepare_script, remote_script_name)
+    run("chmod 0755 #{remote_script_name}")
+    force = pupcap_options[:force] ? "1" : "0"
+    hostname = pupcap_options[:hostname] ? " PUPCAP_HOSTNAME=#{pupcap_options[:hostname]}" : ""
+    sudo("env PUPCAP_FORCE=#{force}#{hostname} #{remote_script_name}")
+    run("rm #{remote_script_name}")
   end
 end

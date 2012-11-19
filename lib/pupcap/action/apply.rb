@@ -15,7 +15,7 @@ class Pupcap::Action::Apply < Pupcap::Action::Base
     unless @parsed_options
       options = default_options.dup
       OptionParser.new do |opts|
-        opts.banner = "Usage: #{File.basename($0)} cook [options] <role>"
+        opts.banner = "Usage: #{File.basename($0)} apply [options] <tasks>"
 
         opts.on("-f", "--file FILE", "A recipe file to load") do |file|
           options[:file] = File.expand_path(file)
