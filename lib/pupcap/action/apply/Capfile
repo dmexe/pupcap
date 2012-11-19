@@ -5,7 +5,7 @@ namespace :deploy do
     if !pupcap_options[:without_librarian_puppet]
       debug = pupcap_options[:debug] ? " --verbose" : ""
       run("ln -sf #{shared_path}/librarian-puppet-cache #{release_path}/puppet/.tmp")
-      run("cd #{release_path}/puppet &&  test -f #{release_path}/puppet/Puppetfile && /usr/local/bin/librarian-puppet install #{debug}; true")
+      run("cd #{release_path}/puppet && /usr/local/bin/librarian-puppet install #{debug}; true")
     end
   end
 
