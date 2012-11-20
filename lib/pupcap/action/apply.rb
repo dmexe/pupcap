@@ -48,7 +48,8 @@ class Pupcap::Action::Apply < Pupcap::Action::Base
     {
       :file    => File.expand_path("Pupcapfile"),
       :debug   => false,
-      :noop    => false
+      :noop    => false,
+      :without_librarian_puppet => false
     }
   end
 end

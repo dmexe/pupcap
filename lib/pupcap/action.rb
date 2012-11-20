@@ -61,8 +61,10 @@ module Pupcap::Action
         cap.ssh_options[:forward_agent] = true
         cap.default_run_options[:pty]   = true
 
-        cap.set :deploy_via,    :copy
-        cap.set :copy_cache,    true
+        cap.set :repository, "."
+        cap.set :scm, :none
+        cap.set :deploy_via, :copy
+
         cap.set :copy_exclude,  [".git", ".keys"]
         cap.set :repository,    "."
         cap.set :keep_releases, 2
