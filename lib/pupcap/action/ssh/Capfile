@@ -4,7 +4,7 @@ namespace :ssh do
     if server
       host = Pupcap::Command.server_host(self, server)
       port = Pupcap::Command.server_port(self, server)
-      exec "ssh #{host} -t -p #{port} -i #{ssh_options[:keys]} '${SHELL} -l'"
+      exec "ssh #{host} -A -t -p #{port} -i #{ssh_options[:keys]} '${SHELL} -l'"
     end
   end
 end

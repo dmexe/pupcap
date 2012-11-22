@@ -1,8 +1,0 @@
-set -e
-
-for role in $(echo "${1}" | tr "," "\n")
-do
-  echo "*** Role: ${role} ***"
-  <%= puppet %> apply <%= nook + debug %>  --detailed-exitcodes <%= modules %> <%= current_path %>/puppet/manifests/${role}.pp || true
-done
-

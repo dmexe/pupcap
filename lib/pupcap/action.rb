@@ -41,12 +41,36 @@ module Pupcap::Action
     def cap_load_and_run_task(cap, task)
       cap.load "deploy"
       cap.load "#{lib_root}/#{task}/Capfile"
-      cap.trigger(:load)
       cap.find_and_execute_task(task, :before => :start, :after => :finish)
-      cap.trigger(:exit)
     end
 
     private
+      def parsed_options
+        unless @parsed_options
+          options = default_options.dup
+          OptionParser.new do |opts|
+            opts.banner = "Usage: #{File.basename($0)} <command> [options] <tasks>"
+
+            opts.on("-f", "--file FILE", "A recipe file to load") do |file|
+              options[:file] = File.expand_path(file)
+            end
+
+            opts.on("-h", "--help", "Displays this help info") do
+              puts opts
+              exit 0
+            end
+          end.parse!
+          options[:tasks] = ARGV
+          @parsed_options = options
+        end
+        @parsed_options
+      end
+
+      def default_options
+        {
+          :file    => File.expand_path("Pupcapfile"),
+        }
+      end
 
       def set_cap_vars!(cap, file)
         app = ENV['app'] || File.basename(File.dirname(file))
@@ -67,7 +91,6 @@ module Pupcap::Action
 
         cap.set :copy_exclude,  [".git", ".keys"]
         cap.set :repository,    "."
-        cap.set :keep_releases, 2
         cap.set :use_sudo,      false
         cap
       end

@@ -1,47 +1,52 @@
-require 'erb'
+_cset(:pupcap_apply_cmd)         { "/usr/local/bin/puppet apply" }
+_cset(:pupcap_librarian_cache)   { "#{shared_path}/cache" }
+_cset(:pupcap_librarian_install) { "/usr/local/bin/librarian-puppet install" }
+_cset(:pupcap_path)              { "#{latest_release}/puppet" }
 
 namespace :deploy do
   task :finalize_update do
-    if !pupcap_options[:without_librarian_puppet]
-      debug = pupcap_options[:debug] ? " --verbose" : ""
-      run("ln -sf #{shared_path}/librarian-puppet-cache #{release_path}/puppet/.tmp")
-      run("cd #{release_path}/puppet ; /usr/local/bin/librarian-puppet install #{debug} --destructive; true")
-    end
-  end
-
-  task :restart do
   end
 end
 
 namespace :apply do
   task :default do
     try_create_dirs
-    find_and_execute_task("deploy")
-    find_and_execute_task("deploy:cleanup")
-    puppet
+    find_and_execute_task("deploy:update_code")
+    librarian
+    find_and_execute_task("deploy:create_symlink")
+    apply
+    cleanup
+  end
+
+  task :librarian do
+    unless ENV['WITHOUT_LIBRARIAN']
+      debug = ENV['DEBUG'] ? " --verbose" : ""
+      run("ln -sf #{pupcap_librarian_cache} #{pupcap_path}/.tmp")
+      run("cd #{pupcap_path} && #{pupcap_librarian_install} #{debug} --destructive; true")
+    end
   end
 
   task :try_create_dirs do
-    run("mkdir -p #{deploy_to}/releases ; mkdir -p #{deploy_to}/shared/librarian-puppet-cache ; chmod 0700 #{deploy_to}")
+    run("mkdir -p #{deploy_to}/releases ; mkdir -p #{pupcap_librarian_cache}; chmod 0700 #{deploy_to}")
   end
 
-  task :puppet do
-    remote_command = "#{deploy_to}/apply.sh"
+  task :apply do
+    modules    = "--modulepath=#{pupcap_path}/modules:#{pupcap_path}/site-modules"
+    noop       = ENV['NOOP'] ? " --noop" : ""
+    debug      = ENV['DEBUG'] ? " --debug --verbose" : ""
 
-    puppet = "/usr/local/bin/puppet"
-    modules = "--modulepath=#{current_path}/puppet/modules:#{current_path}/puppet/site-modules"
-    nook = pupcap_options[:noop] ? " --noop" : ""
-    debug = pupcap_options[:debug] ? " --debug --verbose" : ""
-
-    erb = ERB.new(File.read("#{pupcap_root}/action/apply/puppet.sh.erb"))
-    rs = erb.result(binding)
-
-    put(rs, remote_command)
-    run("chmod +x #{remote_command}")
-    sudo("#{remote_command} \"$CAPISTRANO:HOSTROLES$\"")
+    cmd =<<-EOF.gsub(/\n/, ' ').gsub(/ +/, ' ')
+    for role in $(echo $CAPISTRANO:HOSTROLES$ | tr "," "\n") ;
+    do
+      echo "*** Role: ${role} ***" &&
+      #{sudo} #{pupcap_apply_cmd} #{noop}#{debug} #{modules} #{pupcap_path}/manifests/${role}.pp ||
+      true ;
+    done
+    EOF
+    run(cmd)
   end
 
   task :cleanup do
-    run("rm -rf #{deploy_to}")
+    run("rm -rf #{deploy_to}/releases")
   end
 end
