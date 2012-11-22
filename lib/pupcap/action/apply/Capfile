@@ -1,7 +1,9 @@
 _cset(:pupcap_apply_cmd)         { "/usr/local/bin/puppet apply" }
 _cset(:pupcap_librarian_cache)   { "#{shared_path}/cache" }
 _cset(:pupcap_librarian_install) { "/usr/local/bin/librarian-puppet install" }
-_cset(:pupcap_path)              { "#{latest_release}/puppet" }
+_cset(:pupcap_path)              { "#{latest_release}" }
+_cset(:pupcap_hiera_config)      { "#{pupcap_path}/hiera.yaml" }
+_cset(:environment, 'production')
 
 namespace :deploy do
   task :finalize_update do
@@ -14,6 +16,7 @@ namespace :apply do
     find_and_execute_task("deploy:update_code")
     librarian
     find_and_execute_task("deploy:create_symlink")
+    symlink_hiera
     apply
     cleanup
   end
@@ -28,25 +31,33 @@ namespace :apply do
 
   task :try_create_dirs do
     run("mkdir -p #{deploy_to}/releases ; mkdir -p #{pupcap_librarian_cache}; chmod 0700 #{deploy_to}")
+    run("mkdir -p #{shared_path}/confdir")
   end
 
   task :apply do
     modules    = "--modulepath=#{pupcap_path}/modules:#{pupcap_path}/site-modules"
+    env        = "--environment=#{environment}"
     noop       = ENV['NOOP'] ? " --noop" : ""
     debug      = ENV['DEBUG'] ? " --debug --verbose" : ""
+    config     = "--confdir=/etc/puppet/"
 
     cmd =<<-EOF.gsub(/\n/, ' ').gsub(/ +/, ' ')
     for role in $(echo $CAPISTRANO:HOSTROLES$ | tr "," "\n") ;
     do
       echo "*** Role: ${role} ***" &&
-      #{sudo} #{pupcap_apply_cmd} #{noop}#{debug} #{modules} #{pupcap_path}/manifests/${role}.pp ||
+      #{sudo} #{pupcap_apply_cmd} #{noop}#{debug} #{config} #{env} #{modules} #{pupcap_path}/manifests/${role}.pp ||
       true ;
     done
     EOF
     run(cmd)
   end
 
+  task :symlink_hiera do
+    run("test -f #{pupcap_hiera_config} && #{sudo} ln -nsf #{pupcap_hiera_config} /etc/puppet/hiera.yaml")
+    run("#{sudo} rsync -as --delete #{pupcap_path}/hieradata/ /etc/puppet/hieradata/")
+  end
+
   task :cleanup do
-    run("rm -rf #{deploy_to}/releases")
+    run("#{sudo} rm -rf #{deploy_to}/releases")
   end
 end

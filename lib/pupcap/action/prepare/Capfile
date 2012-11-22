@@ -44,8 +44,8 @@ namespace :prepare do
     remote_script_name = "/tmp/pupcap_prepare.sh"
     put(prepare_script, remote_script_name)
     run("chmod 0755 #{remote_script_name}")
-    force = pupcap_options[:force] ? "1" : "0"
-    hostname = pupcap_options[:hostname] ? " PUPCAP_HOSTNAME=#{pupcap_options[:hostname]}" : ""
+    force = ENV['FORCE'] ? "1" : "0"
+    hostname = ENV['HOSTNAME'] ? " PUPCAP_HOSTNAME=#{ENV['HOSTNAME']}" : ""
     sudo("env PUPCAP_FORCE=#{force}#{hostname} #{remote_script_name}")
     run("rm #{remote_script_name}")
   end
