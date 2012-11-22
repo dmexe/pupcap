@@ -52,27 +52,27 @@ class Pupcap::Action::Init < Pupcap::Action::Base
   end
 
   def create_pp
-    out = "#{work_dir}/puppet/manifests/site.pp"
+    out = "#{work_dir}/manifests/site.pp"
     if !File.exists?(out) || force?
       erb = ERB.new(File.read("#{lib_root}/init/site.pp.erb"))
       rs = erb.result(binding)
       File.open(out, "w+"){ |io| io.write rs }
-      puts "create puppet/manifests/site.pp"
+      puts "create manifests/site.pp"
     else
       puts "skip #{out}"
     end
   end
 
   def create_directories
-    FileUtils.mkdir_p("#{work_dir}/puppet/modules")
-    FileUtils.mkdir_p("#{work_dir}/puppet/site-modules")
-    FileUtils.mkdir_p("#{work_dir}/puppet/manifests")
-    system("touch #{work_dir}/puppet/manifests/.gitkeep")
-    system("touch #{work_dir}/puppet/site-modules/.gitkeep")
+    FileUtils.mkdir_p("#{work_dir}/modules")
+    FileUtils.mkdir_p("#{work_dir}/site-modules")
+    FileUtils.mkdir_p("#{work_dir}/manifests")
+    system("touch #{work_dir}/manifests/.gitkeep")
+    system("touch #{work_dir}/site-modules/.gitkeep")
   end
 
   def librarian_puppet
-    Pupcap::Command.run_local("(cd #{work_dir}/puppet && librarian-puppet init)")
+    Pupcap::Command.run_local("(cd #{work_dir} && librarian-puppet init)")
   end
 
   def create_gitignore

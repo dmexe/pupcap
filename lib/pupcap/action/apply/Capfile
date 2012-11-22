@@ -59,5 +59,6 @@ namespace :apply do
 
   task :cleanup do
     run("#{sudo} rm -rf #{deploy_to}/releases")
+    run("#{sudo} rm -rf /etc/puppet/hieradata/*")
   end
 end
