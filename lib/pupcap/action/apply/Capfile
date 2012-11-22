@@ -61,7 +61,7 @@ namespace :apply do
 
   task :cleanup do
     run <<-EOF.compact
-      #{sudo} rm -rf #{deploy_to}/releases ;
+      #{sudo} rm -rf #{deploy_to}/releases/* ;
       #{sudo} rm -rf /etc/puppet/hieradata/*
     EOF
   end

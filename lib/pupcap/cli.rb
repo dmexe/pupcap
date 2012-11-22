@@ -19,7 +19,7 @@ class Pupcap::CLI < Thor
     end
   end
 
-  desc "prepare [TASKS]", "Prepare target host"
+  desc "[TASKS] prepare", "Prepare target host"
   method_option :file, :type => :string, :default => File.expand_path("Capfile"),
                 :desc => "Capfile"
   method_option :script, :type => :string, :default => File.expand_path("prepare.sh.erb"),
@@ -40,14 +40,14 @@ class Pupcap::CLI < Thor
     cap_execute_tasks(capfile("prepare"), tasks << "prepare")
   end
 
-  desc "apply [TASKS]", "Puppet apply"
+  desc "[TASKS] apply", "Puppet apply"
   method_option :file, :type => :string, :default => File.expand_path("Capfile"),
                 :desc => "Capfile"
   def apply(*tasks)
     cap_execute_tasks(capfile("apply"), tasks << "apply")
   end
 
-  desc "noop [TASKS]", "Puppet noop"
+  desc "[TASKS] noop", "Puppet noop"
   method_option :file, :type => :string, :default => File.expand_path("Capfile"),
                 :desc => "Capfile"
   def noop(*tasks)
@@ -55,7 +55,7 @@ class Pupcap::CLI < Thor
     apply(*tasks)
   end
 
-  desc "ssh [TASKS]", "Open remote console"
+  desc "[TASKS] ssh", "Open remote console"
   method_option :file, :type => :string, :default => File.expand_path("Capfile"),
                 :desc => "Capfile"
   def ssh(*tasks)
@@ -64,6 +64,24 @@ class Pupcap::CLI < Thor
 
   def self.source_root
     File.dirname(__FILE__)
+  end
+
+  def self.revert_argv_and_start(argv = ARGV)
+    need_to_revert = %w{ noop apply init prepare ssh }
+    if need_to_revert.include?(argv.last) || argv.size > 1
+      last = argv.pop
+      argv = [last] + argv
+    end
+    begin
+      start(argv)
+    rescue Exception => e
+      if ENV['THOR_DEBUG'] == '1'
+        raise e
+      else
+        $stderr.puts e.message
+        exit 1
+      end
+    end
   end
 
   private

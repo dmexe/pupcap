@@ -2,9 +2,6 @@
 
 $:.unshift File.expand_path('../../lib', __FILE__)
 
-#require 'pathname'
-#$:.unshift Pathname.new(File.expand_path(__FILE__)).realpath.join("../../lib")
-
 require 'pupcap/cli'
 
-Pupcap::CLI.start
+Pupcap::CLI.revert_argv_and_start
