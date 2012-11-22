@@ -1,30 +1,40 @@
+require 'thor'
+require 'thor/actions'
+require 'thor/group'
+
 require 'pupcap/action'
-require 'pupcap/command'
-require 'pupcap/lsb_release'
 
-class Pupcap::Action::Prepare < Pupcap::Action::Base
-  def initialize
-    check_puppetfile!
-    check_prepare_script!
+class Pupcap::Action::Prepare < Thor::Group
+
+  include Thor::Actions
+
+  desc "Prepare host"
+  class_option :pupcapfile, :type => :string, :default => -> { File.expand_path("Capfile") }, :aliases => "-f"
+
+  def create_pupcap_directories
+    directory("init", dir)
   end
 
-  def start
-    cap = create_cap_for(parsed_options[:file])
-    cap_load_and_run_task(cap, "prepare")
-  end
-
-  def check_prepare_script!
-    unless File.exists?(parsed_options[:script])
-      $stderr.puts "File #{parsed_options[:script]} does not exists"
-      exit 1
+  def initialize_librarian_puppet
+    inside(dir) do
+      run("librarian-puppet init")
     end
   end
 
-  def default_options
-    {
-      :file    => File.expand_path("Pupcapfile"),
-      :script  => File.expand_path("prepare.sh.erb"),
-    }
+  def inject_into_giignore
+    inside(dir) do
+      append_to_file(".gitignore", ".vagrant\n", :verbose => false)
+      append_to_file(".gitignore", "*.swp\n", :verbose => false)
+    end
   end
-end
 
+  def self.source_root
+    File.dirname(__FILE__)
+  end
+
+  private
+    def ip
+      options["ip"]
+    end
+
+end

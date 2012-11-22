@@ -1,8 +1,9 @@
 #!/usr/bin/env ruby
 
-require 'pathname'
+$:.unshift File.expand_path('../../lib', __FILE__)
 
-$:.unshift Pathname.new(File.expand_path(__FILE__)).realpath.join("../../lib")
+#require 'pathname'
+#$:.unshift Pathname.new(File.expand_path(__FILE__)).realpath.join("../../lib")
 
 require 'pupcap/cli'
 

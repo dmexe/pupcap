@@ -1,11 +1,11 @@
 require 'scanf'
 module Pupcap
 
-  class Version
+  class VERSION
 
     MAJOR = 0
-    MINOR = 2
-    PATCH = 3
+    MINOR = 3
+    PATCH = 0
 
     def self.to_s
       "#{MAJOR}.#{MINOR}.#{PATCH}"

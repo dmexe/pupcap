@@ -14,24 +14,31 @@ namespace :apply do
   task :default do
     try_create_dirs
     find_and_execute_task("deploy:update_code")
-    librarian
     find_and_execute_task("deploy:create_symlink")
-    symlink_hiera
+    prepare
     apply
     cleanup
   end
 
-  task :librarian do
-    unless ENV['WITHOUT_LIBRARIAN']
-      debug = ENV['DEBUG'] ? " --verbose" : ""
-      run("ln -sf #{pupcap_librarian_cache} #{pupcap_path}/.tmp")
-      run("cd #{pupcap_path} && #{pupcap_librarian_install} #{debug} --destructive; true")
-    end
+  task :try_create_dirs do
+    run <<-EOF.compact
+      mkdir -p #{deploy_to}/releases ;
+      mkdir -p #{pupcap_librarian_cache} ;
+      chmod 0700 #{deploy_to} ;
+      mkdir -p #{shared_path}/confdir ;
+    EOF
   end
 
-  task :try_create_dirs do
-    run("mkdir -p #{deploy_to}/releases ; mkdir -p #{pupcap_librarian_cache}; chmod 0700 #{deploy_to}")
-    run("mkdir -p #{shared_path}/confdir")
+  task :prepare do
+    run <<-EOF.compact
+      test -d /etc/puppet || (#{sudo} mkdir -p /etc/puppet && #{sudo} chown root:puppet /ect/puppet) ;
+      test -f #{pupcap_hiera_config} && #{sudo} ln -nsf #{pupcap_hiera_config} /etc/puppet/hiera.yaml ;
+      #{sudo} rsync -as --delete #{pupcap_path}/hieradata/ /etc/puppet/hieradata/ ;
+
+      ln -sf #{pupcap_librarian_cache} #{pupcap_path}/.tmp ;
+      cd #{pupcap_path} && #{pupcap_librarian_install} #{ENV['DEBUG'] && '--verbose'} --destructive ;
+      true
+    EOF
   end
 
   task :apply do
@@ -44,7 +51,7 @@ namespace :apply do
     cmd =<<-EOF.gsub(/\n/, ' ').gsub(/ +/, ' ')
     for role in $(echo $CAPISTRANO:HOSTROLES$ | tr "," "\n") ;
     do
-      echo "*** Role: ${role} ***" &&
+      echo "*** For: ${role}:#{environment} ***" &&
       #{sudo} #{pupcap_apply_cmd} #{noop}#{debug} #{config} #{env} #{modules} #{pupcap_path}/manifests/${role}.pp ||
       true ;
     done
@@ -52,13 +59,10 @@ namespace :apply do
     run(cmd)
   end
 
-  task :symlink_hiera do
-    run("test -f #{pupcap_hiera_config} && #{sudo} ln -nsf #{pupcap_hiera_config} /etc/puppet/hiera.yaml")
-    run("#{sudo} rsync -as --delete #{pupcap_path}/hieradata/ /etc/puppet/hieradata/")
-  end
-
   task :cleanup do
-    run("#{sudo} rm -rf #{deploy_to}/releases")
-    run("#{sudo} rm -rf /etc/puppet/hieradata/*")
+    run <<-EOF.compact
+      #{sudo} rm -rf #{deploy_to}/releases ;
+      #{sudo} rm -rf /etc/puppet/hieradata/*
+    EOF
   end
 end

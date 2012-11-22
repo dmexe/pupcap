@@ -1,10 +1,9 @@
-require 'net/ssh/multi'
+_cset(:pupcap_prepare_script, "/tmp/pupcap_prepare.sh")
 
 namespace :prepare do
   task :default do
-    generate_keys
     try_ssh_copy_id
-    run_script
+    script
   end
 
   task :try_ssh_copy_id do
@@ -18,35 +17,27 @@ namespace :prepare do
   end
 
   task :ssh_copy_id do
-    remote_key_path = "/tmp/#{application}_id.pub.#{Time.now.to_i}"
-    upload(provision_key_pub, remote_key_path)
-    run("mkdir -p ~/.ssh && chmod 0700 ~/.ssh")
-    run("cat #{remote_key_path} >> ~/.ssh/authorized_keys && chmod 0600 ~/.ssh/authorized_keys")
-    run("rm -f #{remote_key_path}")
-  end
+    key_content = File.read(provision_key_pub).strip
+    content = capture("test -d ~/.ssh && cat ~/.ssh/authorized_keys || echo")
 
-  task :generate_keys do
-    unless File.exists?(provision_key)
-      logger.important("Generate keys")
-      Pupcap::Command.ensure_local_dir("#{local_root}/.keys", "0700")
-      Pupcap::Command.run_local("ssh-keygen -q -b 1024 -t rsa -C \"#{application} provision key\" -f #{provision_key}")
-      Pupcap::Command.run_local("chmod 0600 #{provision_key}")
-      Pupcap::Command.run_local("chmod 0600 #{provision_key_pub}")
+    unless content.include?(key_content)
+      remote_key_path = "/tmp/#{application}_id.pub.#{Time.now.to_i}"
+      put(key_content, remote_key_path)
+      run <<-EOF.compact
+      mkdir -p ~/.ssh && chmod 0700 ~/.ssh ;
+      cat #{remote_key_path} >> ~/.ssh/authorized_keys && chmod 0600 ~/.ssh/authorized_keys ;
+      rm -f #{remote_key_path}
+      EOF
     end
   end
 
-  task :run_script do
+  task :script do
     template = pupcap_options[:script]
-    prepare_script = ERB.new(File.read template).result(binding)
+    content = ERB.new(File.read template).result(binding)
 
-    set :use_sudo, true
-
-    remote_script_name = "/tmp/pupcap_prepare.sh"
-    put(prepare_script, remote_script_name)
-    run("chmod 0755 #{remote_script_name}")
+    put(content, pupcap_prepare_script)
+    run("chmod 0700 #{pupcap_prepare_script}")
     force = ENV['FORCE'] ? "1" : "0"
-    hostname = ENV['HOSTNAME'] ? " PUPCAP_HOSTNAME=#{ENV['HOSTNAME']}" : ""
-    sudo("env PUPCAP_FORCE=#{force}#{hostname} #{remote_script_name}")
-    run("rm #{remote_script_name}")
+    run("#{sudo} env PUPCAP_FORCE=#{force} #{pupcap_prepare_script}; rm -f #{pupcap_prepare_script}")
   end
 end

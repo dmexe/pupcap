@@ -1,0 +1,8 @@
+task :production do
+  role :site, 'example.com'
+end
+
+task :vagrant do
+  set  :environment, "development"
+  role :site, "vagrant@<%= options[:ip] %>"
+end
