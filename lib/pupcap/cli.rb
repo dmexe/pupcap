@@ -68,7 +68,7 @@ class Pupcap::CLI < Thor
 
   def self.revert_argv_and_start(argv = ARGV)
     need_to_revert = %w{ noop apply init prepare ssh }
-    if need_to_revert.include?(argv.last) || argv.size > 1
+    if need_to_revert.include?(argv.last) && argv.size > 1
       last = argv.pop
       argv = [last] + argv
     end
