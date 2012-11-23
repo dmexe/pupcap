@@ -13,6 +13,9 @@ class Pupcap::CLI < Thor
   def init(dir)
     directory("action/init", dir)
     inside(dir) do
+      unless File.exists?(".gitignore")
+        create_file ".gitignore"
+      end
       append_to_file(".gitignore", ".vagrant\n", :verbose => false)
       append_to_file(".gitignore", "*.swp\n", :verbose => false)
       run("librarian-puppet init")

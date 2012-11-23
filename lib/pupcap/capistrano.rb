@@ -9,6 +9,17 @@ module Pupcap::Capistrano
     ["deploy", pupcap_capfile, file].each{|f| cap.load f }
     tasks.each do |task|
       cap.find_and_execute_task(task)
+      cap_use_rsync!(cap)
+    end
+    cap
+  end
+
+  def cap_use_rsync!(cap)
+    if cap.fetch(:pupcap_use_rsync, false)
+      puts 1
+      cap.set :repository,              "."
+      cap.set :scm,                     :none
+      cap.set :deploy_via,              :copy
     end
     cap
   end
@@ -28,11 +39,7 @@ module Pupcap::Capistrano
     cap.ssh_options[:keys]          = cap.provision_key
     cap.ssh_options[:forward_agent] = true
     cap.default_run_options[:pty]   = true
-
-    cap.set :repository,              "."
-    cap.set :scm,                     :none
-    cap.set :deploy_via,              :copy
-
+    cap.set :scm,                     :git
     cap.set :copy_exclude,            [".git", ".keys"]
     cap
   end
