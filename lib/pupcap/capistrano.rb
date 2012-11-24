@@ -16,7 +16,6 @@ module Pupcap::Capistrano
 
   def cap_use_rsync!(cap)
     if cap.fetch(:pupcap_use_rsync, false)
-      puts 1
       cap.set :repository,              "."
       cap.set :scm,                     :none
       cap.set :deploy_via,              :copy
