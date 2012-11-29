@@ -31,7 +31,7 @@ namespace :apply do
 
   task :prepare do
     run <<-EOF.compact
-      test -d /etc/puppet || (#{sudo} mkdir -p /etc/puppet && #{sudo} chown root:puppet /ect/puppet) ;
+      test -d /etc/puppet || (#{sudo} mkdir -p /etc/puppet && #{sudo} chown root:puppet /etc/puppet) ;
       test -f #{pupcap_hiera_config} && #{sudo} ln -nsf #{pupcap_hiera_config} /etc/puppet/hiera.yaml ;
       #{sudo} rsync -as --delete #{pupcap_path}/hieradata/ /etc/puppet/hieradata/ ;
 
