@@ -18,7 +18,5 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
 
   s.add_runtime_dependency("capistrano", [">= 2.12.0"])
-  s.add_runtime_dependency("vagrant", [">= 1.0.0"])
-  s.add_runtime_dependency("librarian-puppet", [">= 0.9.7"])
   s.add_runtime_dependency("thor", [">= 0"])
 end
